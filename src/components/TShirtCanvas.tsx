@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useRef, useState, useCallback, useEffect, useId } from 'react'
 import type { CustomizationOptions, ActiveTool } from './TShirtCustomizer'
 import { Button } from '@/components/ui/button'
 import { ZoomIn, ZoomOut, Maximize2, Download } from 'lucide-react'
@@ -55,6 +55,25 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
   const deep    = adj(c, isWhite ? -30 : -55)
   const crease  = adj(c, isWhite ? -12 : -40)
   const shadowC = rgba('#000000', isWhite ? 0.06 : 0.18)
+
+  // Every instance gets a unique prefix AND the color is baked into gradient IDs
+  // so both desktop+mobile SVGs coexist without ID collisions
+  const uid = useId().replace(/:/g, '')
+  const gid = c.replace('#', '')
+  const ID = {
+    drop:    `${uid}_drop`,
+    tex:     `${uid}_tex`,
+    collarF: `${uid}_collarF`,
+    dots:    `${uid}_dots`,
+    bodyG:   `${uid}_bodyG_${gid}`,
+    bodyV:   `${uid}_bodyV_${gid}`,
+    slvL:    `${uid}_slvL_${gid}`,
+    slvR:    `${uid}_slvR_${gid}`,
+    armL:    `${uid}_armL`,
+    armR:    `${uid}_armR`,
+    collarG: `${uid}_collarG_${gid}`,
+    print:   `${uid}_print`,
+  }
 
   const baseTextY = options.textPosition === 'top' ? 235 : options.textPosition === 'bottom' ? 430 : 330
   const designX   = 250 + dOffset.x
@@ -176,11 +195,11 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
       {/* ── Dot-grid background (Vistaprint style) ── */}
       <svg className="absolute inset-0 w-full h-full pointer-events-none" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <pattern id="dots" x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
+          <pattern id={ID.dots} x="0" y="0" width="24" height="24" patternUnits="userSpaceOnUse">
             <circle cx="1" cy="1" r="1" fill="#c8cdd6" />
           </pattern>
         </defs>
-        <rect width="100%" height="100%" fill="url(#dots)" />
+        <rect width="100%" height="100%" fill={`url(#${ID.dots})`} />
       </svg>
 
       {/* ── Zoomed / panned shirt ── */}
@@ -202,22 +221,22 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
           ref={svgRef}
           viewBox="0 0 500 580"
           xmlns="http://www.w3.org/2000/svg"
-          style={{ width: 420, height: 490, display: 'block' }}
+          style={{ width: 'min(420px, 85vw)', height: 'auto', display: 'block' }}
         >
           <defs>
-            <filter id="drop" x="-20%" y="-10%" width="140%" height="140%">
+            <filter id={ID.drop} x="-20%" y="-10%" width="140%" height="140%">
               <feDropShadow dx="0" dy="10" stdDeviation="18" floodColor="rgba(0,0,0,0.22)" />
             </filter>
-            <filter id="tex" x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
+            <filter id={ID.tex} x="0%" y="0%" width="100%" height="100%" colorInterpolationFilters="sRGB">
               <feTurbulence type="fractalNoise" baseFrequency="0.75 0.55" numOctaves="4" stitchTiles="stitch" result="n"/>
               <feColorMatrix type="saturate" values="0" in="n" result="g"/>
               <feBlend in="SourceGraphic" in2="g" mode="multiply" result="b"/>
               <feComposite in="b" in2="SourceGraphic" operator="in"/>
             </filter>
-            <filter id="collarF" x="-10%" y="-10%" width="120%" height="120%">
+            <filter id={ID.collarF} x="-10%" y="-10%" width="120%" height="120%">
               <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="rgba(0,0,0,0.28)" />
             </filter>
-            <linearGradient id="bodyG" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id={ID.bodyG} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%"   stopColor={deep}    />
               <stop offset="12%"  stopColor={shade}   />
               <stop offset="30%"  stopColor={soft}    />
@@ -226,34 +245,34 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
               <stop offset="88%"  stopColor={shade}   />
               <stop offset="100%" stopColor={deep}    />
             </linearGradient>
-            <linearGradient id="bodyV" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id={ID.bodyV} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%"   stopColor="rgba(0,0,0,0)"    />
               <stop offset="60%"  stopColor="rgba(0,0,0,0)"    />
               <stop offset="100%" stopColor="rgba(0,0,0,0.10)" />
             </linearGradient>
-            <linearGradient id="slvL" x1="0%" y1="0%" x2="100%" y2="80%">
+            <linearGradient id={ID.slvL} x1="0%" y1="0%" x2="100%" y2="80%">
               <stop offset="0%"   stopColor={deep}  />
               <stop offset="45%"  stopColor={shade} />
               <stop offset="100%" stopColor={soft}  />
             </linearGradient>
-            <linearGradient id="slvR" x1="100%" y1="0%" x2="0%" y2="80%">
+            <linearGradient id={ID.slvR} x1="100%" y1="0%" x2="0%" y2="80%">
               <stop offset="0%"   stopColor={deep}  />
               <stop offset="45%"  stopColor={shade} />
               <stop offset="100%" stopColor={soft}  />
             </linearGradient>
-            <linearGradient id="armL" x1="0%" y1="0%" x2="100%" y2="0%">
+            <linearGradient id={ID.armL} x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%"   stopColor="rgba(0,0,0,0.18)" />
               <stop offset="100%" stopColor="rgba(0,0,0,0)"    />
             </linearGradient>
-            <linearGradient id="armR" x1="100%" y1="0%" x2="0%" y2="0%">
+            <linearGradient id={ID.armR} x1="100%" y1="0%" x2="0%" y2="0%">
               <stop offset="0%"   stopColor="rgba(0,0,0,0.18)" />
               <stop offset="100%" stopColor="rgba(0,0,0,0)"    />
             </linearGradient>
-            <linearGradient id="collarG" x1="0%" y1="0%" x2="0%" y2="100%">
+            <linearGradient id={ID.collarG} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%"   stopColor={shade} />
               <stop offset="100%" stopColor={soft}  />
             </linearGradient>
-            <clipPath id="print">
+            <clipPath id={ID.print}>
               <path d="M 175 128 C 195 148 222 158 250 158 C 278 158 305 148 325 128 L 368 144 L 390 168 L 390 530 L 110 530 L 110 168 L 132 144 Z"/>
             </clipPath>
           </defs>
@@ -262,27 +281,27 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
           <ellipse cx="250" cy="548" rx="175" ry="14" fill="rgba(0,0,0,0.10)" />
 
           {/* Left sleeve */}
-          <path id="slvLPath" d="M 175 128 C 160 132 142 138 122 146 C 96 156 68 170 52 186 C 44 194 42 204 46 214 C 50 224 60 230 74 228 C 88 226 100 218 110 210 L 110 168 L 132 144 Z"
-            fill="url(#slvL)" filter="url(#drop)" />
-          <use href="#slvLPath" fill={c} opacity="0.18" filter="url(#tex)" />
+          <path id={`${uid}_slvLPath`} d="M 175 128 C 160 132 142 138 122 146 C 96 156 68 170 52 186 C 44 194 42 204 46 214 C 50 224 60 230 74 228 C 88 226 100 218 110 210 L 110 168 L 132 144 Z"
+            fill={`url(#${ID.slvL})`} filter={`url(#${ID.drop})`} />
+          <use href={`#${uid}_slvLPath`} fill={c} opacity="0.18" filter={`url(#${ID.tex})`} />
           <path d="M 46 214 C 50 224 60 230 74 228 C 88 226 100 218 110 210 L 108 202 C 98 210 86 218 72 220 C 58 222 50 216 46 214 Z" fill={deep} opacity="0.55" />
           <path d="M 132 148 C 116 162 98 178 82 196" stroke={hilight} strokeWidth="8" fill="none" opacity="0.18" strokeLinecap="round" />
-          <path d="M 110 168 L 110 230 L 125 220 L 125 162 Z" fill="url(#armL)" opacity="0.7" />
+          <path d="M 110 168 L 110 230 L 125 220 L 125 162 Z" fill={`url(#${ID.armL})`} opacity="0.7" />
 
           {/* Right sleeve */}
-          <path id="slvRPath" d="M 325 128 C 340 132 358 138 378 146 C 404 156 432 170 448 186 C 456 194 458 204 454 214 C 450 224 440 230 426 228 C 412 226 400 218 390 210 L 390 168 L 368 144 Z"
-            fill="url(#slvR)" filter="url(#drop)" />
-          <use href="#slvRPath" fill={c} opacity="0.18" filter="url(#tex)" />
+          <path id={`${uid}_slvRPath`} d="M 325 128 C 340 132 358 138 378 146 C 404 156 432 170 448 186 C 456 194 458 204 454 214 C 450 224 440 230 426 228 C 412 226 400 218 390 210 L 390 168 L 368 144 Z"
+            fill={`url(#${ID.slvR})`} filter={`url(#${ID.drop})`} />
+          <use href={`#${uid}_slvRPath`} fill={c} opacity="0.18" filter={`url(#${ID.tex})`} />
           <path d="M 454 214 C 450 224 440 230 426 228 C 412 226 400 218 390 210 L 392 202 C 402 210 414 218 428 220 C 442 222 450 216 454 214 Z" fill={deep} opacity="0.55" />
           <path d="M 368 148 C 384 162 402 178 418 196" stroke={hilight} strokeWidth="8" fill="none" opacity="0.18" strokeLinecap="round" />
-          <path d="M 390 168 L 390 230 L 375 220 L 375 162 Z" fill="url(#armR)" opacity="0.7" />
+          <path d="M 390 168 L 390 230 L 375 220 L 375 162 Z" fill={`url(#${ID.armR})`} opacity="0.7" />
 
           {/* Body */}
-          <path id="bodyPath" d="M 132 144 L 110 168 C 108 200 106 240 106 280 C 106 360 108 450 110 530 L 390 530 C 392 450 394 360 394 280 C 394 240 392 200 390 168 L 368 144 C 348 152 305 162 250 162 C 195 162 152 152 132 144 Z"
-            fill="url(#bodyG)" filter="url(#drop)" />
+          <path id={`${uid}_bodyPath`} d="M 132 144 L 110 168 C 108 200 106 240 106 280 C 106 360 108 450 110 530 L 390 530 C 392 450 394 360 394 280 C 394 240 392 200 390 168 L 368 144 C 348 152 305 162 250 162 C 195 162 152 152 132 144 Z"
+            fill={`url(#${ID.bodyG})`} filter={`url(#${ID.drop})`} />
           <path d="M 132 144 L 110 168 C 108 200 106 240 106 280 C 106 360 108 450 110 530 L 390 530 C 392 450 394 360 394 280 C 394 240 392 200 390 168 L 368 144 C 348 152 305 162 250 162 C 195 162 152 152 132 144 Z"
-            fill="url(#bodyV)" />
-          <use href="#bodyPath" fill={c} opacity="0.14" filter="url(#tex)" />
+            fill={`url(#${ID.bodyV})`} />
+          <use href={`#${uid}_bodyPath`} fill={c} opacity="0.14" filter={`url(#${ID.tex})`} />
 
           {/* Creases */}
           <path d="M 148 175 C 146 280 145 390 147 530" stroke={crease} strokeWidth="3" fill="none" opacity="0.25" strokeLinecap="round" />
@@ -302,16 +321,16 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
 
           {/* Collar */}
           {isFront ? (
-            <g filter="url(#collarF)">
-              <path d="M 175 128 C 195 148 222 158 250 158 C 278 158 305 148 325 128 C 308 108 282 98 250 98 C 218 98 192 108 175 128 Z" fill="url(#collarG)" />
+            <g filter={`url(#${ID.collarF})`}>
+              <path d="M 175 128 C 195 148 222 158 250 158 C 278 158 305 148 325 128 C 308 108 282 98 250 98 C 218 98 192 108 175 128 Z" fill={`url(#${ID.collarG})`} />
               <path d="M 175 128 C 195 148 222 158 250 158 C 278 158 305 148 325 128" stroke={deep} strokeWidth="2" fill="none" opacity="0.45" />
               <path d="M 175 128 C 192 108 218 98 250 98 C 282 98 308 108 325 128" stroke={deep} strokeWidth="1.5" fill="none" opacity="0.25" />
               <path d="M 205 130 C 225 146 245 152 268 150" stroke={hilight} strokeWidth="4" fill="none" opacity="0.30" strokeLinecap="round" />
               <path d="M 195 136 C 210 150 235 156 255 155" stroke={deep} strokeWidth="1" fill="none" opacity="0.15" strokeLinecap="round" />
             </g>
           ) : (
-            <g filter="url(#collarF)">
-              <path d="M 192 122 C 210 134 230 140 250 140 C 270 140 290 134 308 122 C 292 106 272 98 250 98 C 228 98 208 106 192 122 Z" fill="url(#collarG)" />
+            <g filter={`url(#${ID.collarF})`}>
+              <path d="M 192 122 C 210 134 230 140 250 140 C 270 140 290 134 308 122 C 292 106 272 98 250 98 C 228 98 208 106 192 122 Z" fill={`url(#${ID.collarG})`} />
               <path d="M 192 122 C 210 134 230 140 250 140 C 270 140 290 134 308 122" stroke={deep} strokeWidth="2" fill="none" opacity="0.45" />
               <path d="M 192 122 C 208 106 228 98 250 98 C 272 98 292 106 308 122" stroke={deep} strokeWidth="1.5" fill="none" opacity="0.25" />
             </g>
@@ -319,7 +338,7 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
 
           {/* Draggable design */}
           <g
-            clipPath="url(#print)"
+            clipPath={`url(#${ID.print})`}
             style={{ cursor: dragging ? 'grabbing' : activeTool === 'select' ? 'grab' : 'default' }}
             onPointerDown={onDesignPointerDown}
             onPointerMove={onDesignPointerMove}
@@ -394,8 +413,15 @@ const TShirtCanvas = ({ options, activeTool }: TShirtCanvasProps) => {
 
       {/* ── View badge ── */}
       <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-sm
-                      text-xs font-medium px-3 py-1 rounded-full border border-border shadow-sm capitalize">
+                      text-xs font-medium px-3 py-1 rounded-full border border-border shadow-sm capitalize
+                      hidden sm:flex items-center gap-1 whitespace-nowrap">
         {options.view} view · scroll to zoom · drag design to move
+      </div>
+      {/* Mobile hint */}
+      <div className="absolute top-3 left-1/2 -translate-x-1/2 bg-white/80 backdrop-blur-sm
+                      text-xs font-medium px-3 py-1 rounded-full border border-border shadow-sm capitalize
+                      flex sm:hidden items-center gap-1 whitespace-nowrap">
+        {options.view} · pinch to zoom
       </div>
     </main>
   )

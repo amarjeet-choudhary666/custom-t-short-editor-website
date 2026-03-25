@@ -2,6 +2,7 @@ import { useState } from 'react'
 import TShirtCanvas from './TShirtCanvas'
 import DesignToolbar from './DesignToolbar'
 import PropertiesPanel from './PropertiesPanel'
+import MobileBottomSheet from './MobileBottomSheet'
 import type { CartItem } from '@/hooks/useCart'
 
 export type TShirtSize = 'XS' | 'S' | 'M' | 'L' | 'XL' | 'XXL'
@@ -62,32 +63,52 @@ const TShirtCustomizer = ({ onAddToCart }: TShirtCustomizerProps) => {
   const totalPrice = (PRICE_BASE * options.quantity).toFixed(2)
 
   return (
-    /* Vistaprint-style: full-width editor with left toolbar + centre canvas + right panel */
-    <div className="flex h-[calc(100vh-56px)] overflow-hidden bg-[#f4f5f7]">
+    <>
+      {/* ── DESKTOP: 3-column Vistaprint layout ── */}
+      <div className="hidden md:flex h-[calc(100vh-56px)] overflow-hidden bg-[#f4f5f7]">
+        <DesignToolbar
+          activeTool={activeTool}
+          setActiveTool={setActiveTool}
+          options={options}
+          updateOption={updateOption}
+        />
+        <TShirtCanvas
+          options={options}
+          updateOption={updateOption}
+          activeTool={activeTool}
+        />
+        <PropertiesPanel
+          options={options}
+          updateOption={updateOption}
+          totalPrice={totalPrice}
+          onAddToCart={onAddToCart}
+        />
+      </div>
 
-      {/* ── Left toolbar ── */}
-      <DesignToolbar
-        activeTool={activeTool}
-        setActiveTool={setActiveTool}
-        options={options}
-        updateOption={updateOption}
-      />
+      {/* ── MOBILE: canvas top + fixed bottom panel ── */}
+      <div className="flex md:hidden flex-col bg-[#f4f5f7]" style={{ height: '100dvh', paddingTop: 0 }}>
+        {/* Canvas — fixed height so bottom sheet is always visible */}
+        <div style={{ height: '52dvh', flexShrink: 0 }}>
+          <TShirtCanvas
+            options={options}
+            updateOption={updateOption}
+            activeTool={activeTool}
+          />
+        </div>
 
-      {/* ── Centre canvas ── */}
-      <TShirtCanvas
-        options={options}
-        updateOption={updateOption}
-        activeTool={activeTool}
-      />
-
-      {/* ── Right properties panel ── */}
-      <PropertiesPanel
-        options={options}
-        updateOption={updateOption}
-        totalPrice={totalPrice}
-        onAddToCart={onAddToCart}
-      />
-    </div>
+        {/* Bottom sheet — fills remaining space */}
+        <div style={{ height: '48dvh', flexShrink: 0 }}>
+          <MobileBottomSheet
+            activeTool={activeTool}
+            setActiveTool={setActiveTool}
+            options={options}
+            updateOption={updateOption}
+            totalPrice={totalPrice}
+            onAddToCart={onAddToCart}
+          />
+        </div>
+      </div>
+    </>
   )
 }
 

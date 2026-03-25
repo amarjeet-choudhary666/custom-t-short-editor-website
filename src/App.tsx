@@ -23,7 +23,7 @@ function App() {
             <a href="#" className="hover:text-foreground transition-colors">Pricing</a>
           </nav>
           <div className="flex items-center gap-3">
-            <span className="hidden sm:inline text-sm text-muted-foreground">
+            <span className="hidden lg:inline text-sm text-muted-foreground">
               Free shipping over $50
             </span>
             <CartDrawer
@@ -41,7 +41,7 @@ function App() {
         <TShirtCustomizer onAddToCart={addItem} />
       </main>
 
-      <footer className="border-t py-6 text-center text-sm text-muted-foreground">
+      <footer className="hidden md:block border-t py-6 text-center text-sm text-muted-foreground">
         © 2025 ThreadCraft · Custom Apparel Made Easy
       </footer>
 
